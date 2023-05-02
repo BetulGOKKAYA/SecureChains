@@ -1,0 +1,22 @@
+{
+    "name": "securechains",
+    "mastertemplate": "securechains",
+    "version": "1.0.0",
+    "description": "SecureChains - A security risk assessment solution for supply chain companies",
+    "scripts": {},
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/BetulGOKKAYA/SecureChains"
+    },
+    "bugs": {
+      "url": "https://github.com/BetulGOKKAYA/SecureChains/issues",
+      "email": "betul.gokkaya@soton.ac.uk"
+    },
+    "author": "Betul GOKKAYA - University of SOUTHAMPTON <betul.gokkaya@soton.ac.uk> (https://securechains.co.uk)",
+    "engines": {
+      "node": ">=10.0.0"
+    },
+    "dependencies": {},
+    "devDependencies": {}
+  }
+  

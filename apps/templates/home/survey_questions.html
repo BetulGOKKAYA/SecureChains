@@ -1,0 +1,107 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block title %} UI Badges {% endblock %} 
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+
+     <!-- [ Main Content ] start -->
+     <div class="pcoded-main-container">
+        <div class="pcoded-wrapper">
+
+            <div class="pcoded-content">
+                <div class="pcoded-inner-content">
+                    <!-- [ breadcrumb ] start -->
+                    <div class="page-header">
+                        <div class="page-block">
+                            <div class="row align-items-center">
+                                <div class="col-md-12">
+                                    <div class="page-header-title"> 
+                                    </div>
+                                    <ul class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="/"><i class="feather icon-home"></i></a></li>
+                                        <li class="breadcrumb-item"><a href="javascript:">Questionnaire</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- [ breadcrumb ] end -->
+                    <div class="main-body">
+                        <div class="page-wrapper">
+                            <!-- [ Main Content ] start -->
+                            <div class="row">
+                                <!-- [ badge ] start -->
+                                <div class="col-sm-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5>Questions</h5>
+                                        </div>
+                                        <div id="save-box">
+                                        </div>
+                                        
+                                        <form id="risk-form" class="mt-3 mb-3">
+                                            {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-success modal-button mt-3"
+                                                data-toggle="modal"
+                                                data-target="#StartModal" id="submit-btn">save</button>
+                                                <button type="button" id="edit-button" class="btn btn-outline-info mt-3" >show/edit answers</button>
+                                                <button type="button" id="update-button" class="btn btn-outline-success mt-3" >update answers</button>
+                                                <a href="{% url 'home' %}" id="dashboard-btn" class="btn btn-outline-info mt-3" >go dashboard</a>
+                                            <div id="risk-box">
+                                            </div>  
+
+                                            <!-- Modal start-->
+                                            <div class="modal fade" id="StartModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                              <div class="modal-content">
+                                                <div class="modal-header">
+                                                  <h5 class="modal-title" id="exampleModalLabel">Submit</h5>
+                                                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                  </button>
+                                                </div>
+                                                <div class="modal-body" id="modal-body-confirm"></div>
+                                                <div class="modal-footer">
+                                                  <button type="button" class="btn btn-danger" data-dismiss="modal">no</button>
+                                                  <button type="button" id="start-button" class="btn btn-success">yes</button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            </div>
+                                            <!-- Modal end-->
+                                            
+                                            
+                                        </form>
+                                        <div id="result-box"></div>
+ 
+
+
+                                    </div>
+                                   
+                                </div>
+                                <!-- [ badge ] end -->
+                            </div>
+                            <!-- [ Main Content ] end -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- [ Main Content ] end -->
+
+    
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script src="{% static '/assets/js/survey-questions.js' %}" defer></script> 
+{% endblock javascripts %}
+
+

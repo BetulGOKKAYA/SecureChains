@@ -1,0 +1,180 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Page Blank {% endblock %} 
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <!-- [ Main Content ] start -->
+    <div class="pcoded-main-container">
+        <div class="pcoded-wrapper">
+            <div class="pcoded-content">
+                <div class="pcoded-inner-content">
+                    <!-- [ breadcrumb ] start -->
+                    <div class="page-header">
+                        <div class="page-block">
+                            <div class="row align-items-center">
+                                <div class="col-md-12">
+                                    <div class="page-header-title">
+                                         
+                                    </div>
+                                    <ul class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="/"><i class="feather icon-home"></i></a></li>
+                                        <li class="breadcrumb-item"><a href="javascript:">Risk Results</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [ breadcrumb ] end -->
+                    <div class="main-body">
+                        <div class="page-wrapper">
+                            <!-- [ Main Content ] start -->
+                            {% csrf_token %}
+                            {% for result in results %}   
+                            <div class="row">
+                                <div class="col-xl-6 col-md-6">
+                                    <div class="card infra-risk"> 
+                                        <div class="card-block" style="background-color:#bbcedb98">
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-12"> 
+                                                    <div class="card-header"> 
+                                                        <h5><b>Asset Type for {{result.risk_group}}  : </b>  {{result.asset_type}}  
+                                                        </h5> 
+                                                      </div>  
+                                                </div>
+                                            </div>
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-12">
+                                                    <br>
+                                                    <h5>Risk group related to : {{result.question_group}} 
+                                                        </h5><hr>
+                                                </div>
+                                            </div>   
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-12"> 
+                                                        {%if result.qualitative_result == 'Very High' %}
+                                                        <b>Overall Score for This Group:</b>  <span class="badge badge-danger" style="background-color:#9f3b22">{{result.qualitative_result}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>
+                                                        {%endif%}   
+                                                        {%if result.qualitative_result == 'High' %} 
+                                                        <b>Overall Score for This Group:</b>  <span class="badge badge-danger">{{result.qualitative_result}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>  
+                                                        {%endif%}
+                                                        {%if result.qualitative_result == 'Medium' %} 
+                                                        <b>Overall Score for This Group:</b>  <span class="badge badge-warning">{{result.qualitative_result}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>  
+                                                        {%endif%}
+                                                        {%if result.qualitative_result == 'Low' %} 
+                                                        <b>Overall Score for This Group:</b>  <span class="badge badge-success">{{result.qualitative_result}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>  
+                                                        {%endif%} 
+                                                        {%if result.qualitative_result == 'Very Low' %} 
+                                                        <b>Overall Score for This Group:</b>  <span class="badge badge-success">{{result.qualitative_result}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>  
+                                                        {%endif%}   
+                                                     </div>
+                                            </div>
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-12">  
+                                                        {%if result.threat_score == 'Very High' %}
+                                                        <b>Threat Likelihood Score for This Group:</b>  <span class="badge badge-danger" style="background-color:#9f3b22">{{result.threat_score}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>
+                                                        {%endif%}   
+                                                        {%if result.threat_score == 'High' %} 
+                                                        <b>Threat Likelihood  Score for This Group:</b>  <span class="badge badge-danger">{{result.threat_score}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>  
+                                                        {%endif%}
+                                                        {%if result.threat_score == 'Medium' %} 
+                                                        <b>Threat Likelihood  Score for This Group:</b>  <span class="badge badge-warning">{{result.threat_score}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>  
+                                                        {%endif%}
+                                                        {%if result.threat_score == 'Low' %} 
+                                                        <b>Threat Likelihood  Score for This Group:</b>  <span class="badge badge-success">{{result.threat_score}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>  
+                                                        {%endif%} 
+                                                        {%if result.threat_score == 'Very Low' %} 
+                                                        <b>Threat Likelihood  Score for This Group:</b>  <span class="badge badge-success">{{result.threat_score}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>  
+                                                        {%endif%}    
+                                                     </div>
+                                            </div>
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-12"> 
+                                                        {%if result.vulnerability_score == 'Very High' %}
+                                                        <b>Vulnerability Likelihood Score for This Group:</b>  <span class="badge badge-danger" style="background-color:#9f3b22">{{result.vulnerability_score}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>
+                                                        {%endif%}   
+                                                        {%if result.vulnerability_score == 'High' %} 
+                                                        <b>Vulnerability Likelihood  Score for This Group:</b>  <span class="badge badge-danger">{{result.vulnerability_score}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>  
+                                                        {%endif%}
+                                                        {%if result.vulnerability_score == 'Medium' %} 
+                                                        <b>Vulnerability Likelihood  Score for This Group:</b>  <span class="badge badge-warning">{{result.vulnerability_score}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>  
+                                                        {%endif%}
+                                                        {%if result.vulnerability_score == 'Low' %} 
+                                                        <b>Vulnerability Likelihood  Score for This Group:</b>  <span class="badge badge-success">{{result.vulnerability_score}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>  
+                                                        {%endif%} 
+                                                        {%if result.vulnerability_score == 'Very Low' %} 
+                                                        <b>Vulnerability Likelihood  Score for This Group:</b>  <span class="badge badge-success">{{result.vulnerability_score}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>  
+                                                        {%endif%}     
+                                                     </div>
+                                            </div>
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-12"> 
+                                                        {%if result.impact_score == 'Very High' %}
+                                                        <b>Impact Score for This Group:</b>  <span class="badge badge-danger" style="background-color:#9f3b22">{{result.impact_score}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>
+                                                        {%endif%}   
+                                                        {%if result.impact_score == 'High' %} 
+                                                        <b>Impact Score for This Group:</b>  <span class="badge badge-danger">{{result.impact_score}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>  
+                                                        {%endif%}
+                                                        {%if result.impact_score == 'Medium' %} 
+                                                        <b>Impact Score for This Group:</b>  <span class="badge badge-warning">{{result.impact_score}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>  
+                                                        {%endif%}
+                                                        {%if result.impact_score == 'Low' %} 
+                                                        <b>Impact Score for This Group:</b>  <span class="badge badge-success">{{result.impact_score}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>  
+                                                        {%endif%} 
+                                                        {%if result.impact_score == 'Very Low' %} 
+                                                        <b>Impact Score for This Group:</b>  <span class="badge badge-success">{{result.impact_score}}</span>
+                                                        <span class="sr-only">unread messages</span><hr>  
+                                                        {%endif%}      
+                                                     </div>
+                                            </div>
+                                                                                                         
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-12">
+
+                                                     <a href="{% url 'dashboard-risk-control-view' result.pk %}"  id="start-link"
+                                                        class="label theme-bg2 text-white f-12">Security Controls</a>
+                                                      
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div> 
+                            </div>
+                                {%endfor%}  
+                            <!-- [ Main Content ] end -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- [ Main Content ] end -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}
+

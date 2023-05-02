@@ -1,0 +1,399 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block title %} Dashboard {% endblock %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}
+<style>
+    svg {
+      display: block;
+      margin: auto;
+    }
+
+    .node circle {
+      fill: #BCED91;
+      stroke-width: 15.5px;
+    }
+
+    .node {
+      font-family: verdana, sans-serif;
+      font-size: 11px;
+      font-weight: bold;
+      fill: #6B4226;
+    }
+
+    .link {
+      fill: none;
+      stroke: #BFBFBF;
+      stroke-width: 2px;
+    }
+
+    </style>
+{% endblock stylesheets %}
+
+{% block content %}
+
+    <!-- [ Main Content ] start -->
+    <div class="pcoded-main-container">
+        <div class="pcoded-wrapper">
+
+            <div class="pcoded-content">
+                <div class="pcoded-inner-content">
+                    <!-- [ breadcrumb ] start -->
+
+
+                    <!-- [ breadcrumb ] end -->
+                    <div class="main-body">
+                        <div class="page-wrapper">
+                            <!-- [ Main Content ] start -->
+                            <div class="row">
+                                <!--[ Infrastructure section ] start-->
+                                <div class="col-md-6 col-xl-3">
+                                    <div class="card infra-risk">
+                                        <div class="card-block">
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-2">
+                                                    <i class="feather icon-layers text-c-blue f-30 m-r-10"></i>
+                                                </div>
+                                                <div class="col-10  ">
+                                                    <h6 class=" f-12 mb-3"> <b>Infrastructure Questionnaire</b></h6>
+                                                </div>
+                                            </div>
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-8">
+                                                    <h6 class="f-w-300 d-flex align-items-center m-b-0 " >Completed Questions
+                                                        </h6>
+                                                </div>
+
+                                                <div class="col-4 text-right">
+
+                                                    <p class="m-b-0" ><b>{{risk_data.infra}}%</b></p>
+                                                </div>
+                                            </div>
+
+                                            <div class="update m-t-30" style="height: 7px;" >
+                                                <div class="row d-flex justify-content-center align-items-left" >
+                                                    {% for c in categories %}
+                                                    {% if c.name == 'q_infra' %}
+                                                     <a href="{% url 'dashboard-questions-view' c.pk %}" id="start-link"
+                                                        class="label theme-bg2 text-white f-12">Open</a>
+                                                     <a href="{% url 'questions-user-answer' c.pk %}"
+                                                        class="label theme-bg text-white f-12">Update</a>
+                                                    {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--[ Infrastructure section ] end-->
+
+                                <!--[ Hardware questionnaire section ] starts-->
+                                <div class="col-md-6 col-xl-3">
+                                    <div class="card hardware-risk">
+                                        <div class="card-block">
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-2">
+                                                    <i class="feather icon-cpu text-c-purple f-30 m-r-10"></i>
+                                                </div>
+                                                <div class="col-10  ">
+                                                    <h6 class=" f-12 mb-3"> <b>Hardware Questionnaire</b></h6>
+                                                </div>
+                                            </div>
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-8">
+                                                    <h6 class="f-w-300 d-flex align-items-center m-b-0">Completed Questions
+                                                        </h6>
+                                                </div>
+
+                                                <div class="col-4 text-right">
+                                                    <p class="m-b-0">{{risk_data.hardware}}%</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="update m-t-30" style="height: 7px;" >
+                                                <div class="row d-flex justify-content-center align-items-left" >
+                                                    {% for c in categories %}
+                                                    {% if c.name == 'q_hardware' %}
+                                                     <a href="{% url 'dashboard-questions-view' c.pk %}" id="start-link"
+                                                        class="label theme-bg2 text-white f-12">Open</a>
+                                                        <a href="{% url 'questions-user-answer' c.pk %}"
+                                                        class="label theme-bg text-white f-12">Update</a>
+                                                    {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--[ Hardware questionnaire section ] end-->
+                                <!--[ Software questionnaire section ] starts-->
+                                <div class="col-md-6 col-xl-3">
+                                    <div class="card sw-risk">
+                                        <div class="card-block">
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-2">
+                                                    <i class="feather icon-file-text text-c-green f-30 m-r-10"></i>
+                                                </div>
+                                                <div class="col-10  ">
+                                                    <h6 class=" f-12 mb-3"> <b>Software Questionnaire</b></h6>
+                                                </div>
+                                            </div>
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-8">
+                                                    <h6 class="f-w-300 d-flex align-items-center m-b-0">Completed Questions
+                                                        </h6>
+                                                </div>
+
+                                                <div class="col-4 text-right">
+                                                    <p class="m-b-0">{{risk_data.sw}}%</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="update m-t-30" style="height: 7px;" >
+                                                <div class="row d-flex justify-content-center align-items-left" >
+                                                    {% for c in categories %}
+                                                    {% if c.name == 'q_software' %}
+                                                     <a href="{% url 'dashboard-questions-view' c.pk %}" id="start-link"
+                                                        class="label theme-bg2 text-white f-12">Open</a>
+                                                        <a href="{% url 'questions-user-answer' c.pk %}"
+                                                        class="label theme-bg text-white f-12">Update</a>
+                                                    {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--[ Software questionnaire section ] end-->
+                                <!--[ User questionnaire section ] starts-->
+                                <div class="col-md-6 col-xl-3">
+                                    <div class="card user-risk"  >
+                                        <div class="card-block">
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-2">
+                                                    <i class="feather icon-user text-c-yellow f-30 m-r-10"></i>
+                                                </div>
+                                                <div class="col-10  ">
+                                                    <h6 class=" f-12 mb-3"> <b>User Questionnaire</b></h6>
+                                                </div>
+                                            </div>
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-8">
+                                                    <h6 class="f-w-300 d-flex align-items-center m-b-0">Completed Questions
+                                                        </h6>
+                                                </div>
+
+                                                <div class="col-4 text-right">
+                                                    <p class="m-b-0">{{risk_data.user}}%</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="update m-t-30" style="height: 7px;" >
+                                                <div class="row d-flex justify-content-center align-items-left" >
+                                                    {% for c in categories %}
+                                                    {% if c.name == 'q_user' %}
+                                                     <a href="{% url 'dashboard-questions-view' c.pk %}" id="start-link"
+                                                        class="label theme-bg2 text-white f-12">Open</a>
+                                                        <a href="{% url 'questions-user-answer' c.pk %}"
+                                                        class="label theme-bg text-white f-12">Update</a>
+                                                    {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--[ User questionnaire section ] end-->
+
+                                 <!--[ Final risk section ] starts-->
+                                 <div class="col-xl-5 col-md-5">
+                                    <div class="card card-event">
+                                        <div class="card-block">
+                                            <div class="row align-items-center justify-content-center">
+                                                <div class="col">
+                                                    <h5 class="m-0">Security Risk Assessment Results</h5>
+                                                </div>
+                                                <hr>
+                                                </hr>
+                                                <div class="col-auto">
+
+                                                </div>
+                                            </div>
+
+                                            <a href="#!" data-toggle="modal" data-infra ="{{risk_data.infra}}" data-hardware ="{{risk_data.hardware}}"
+                                                    data-target="#StartModal" id="hardwareRisk-btn"
+                                                     type="submit" class="label theme-bg2 text-white f-12"  >Hardware Risk</a>
+                                            <a href="#!" data-toggle="modal" data-infra ="{{risk_data.infra}}"
+                                                     data-target="#StartModal" id="swRisk-btn"
+                                                      type="submit" class="label theme-bg text-white f-12"  >Software Risk</a>
+                                            <a href="#!" data-toggle="modal" data-infra ="{{risk_data.infra}}"
+                                                data-target="#StartModal" id="userRisk-btn"
+                                                 type="submit" class="label theme-bg2 text-white f-12"  >User Risk</a>
+                                            <i class="feather icon-award text-c-green f-50 m-r-10"></i>
+                                         <!-- Modal start-->
+                                         <div class="modal fade" id="StartModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                              <div class="modal-content">
+                                                <div class="modal-header">
+                                                  <h5 class="modal-title" id="exampleModalLabel">Submit</h5>
+                                                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                  </button>
+                                                </div>
+                                                <div class="modal-body" id="modal-body-confirm"></div>
+                                                <div class="modal-footer">
+                                                  <button type="button" class="btn btn-danger" data-dismiss="modal">no</button>
+                                                  <button type="button" id="start-button" class="btn btn-success">yes</button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            </div>
+                                            <!-- Modal end-->
+                                        </div>
+                                    </div>
+                                    <div class="card user-list">
+                                        <div class="card-header">
+                                            <h5>Distribution of Risk Values</h5>
+                                        </div>
+                                        <div class="card-block">
+                                            <div class="row align-items-center justify-content-center m-b-20">
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-xl-12">
+                                                    <h6 class="align-items-center float-left"><i
+                                                            class="fas fa-lock f-10 m-r-10 text-c-red"></i>Very HIgh Risks</h6>
+                                                    <h6 id="progress-very_high" class="align-items-center float-right">{{result_data.very_high}}</h6>
+                                                    <div class="progress m-t-30  m-b-20" style="height: 6px;">
+                                                        <div id="progress-bar-very_high" class="progress-bar progress-c-theme2" role="progressbar"
+                                                                style="width: 0%;" aria-valuenow="very_high" aria-valuemin="0"
+                                                                aria-valuemax="100"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xl-12">
+                                                    <h6 class="align-items-center float-left"><i
+                                                            class="fas fa-lock f-10 m-r-10 text-c-lightred"></i>HIgh Risks</h6>
+                                                    <h6 id="progress-high" class="align-items-center float-right">{{result_data.high}}</h6>
+                                                    <div class="progress m-t-30 m-b-20" style="height: 6px;">
+                                                        <div id="progress-bar" class="progress-bar progress-c-theme2" role="progressbar" style="width: 0%;"
+                                                            aria-valuenow="high" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xl-12">
+                                                    <h6 class="align-items-center float-left"><i
+                                                            class="fas fa-lock f-10 m-r-10 text-c-yellow"></i>Medium Risks</h6>
+                                                    <h6 id="progress-medium" class="align-items-center float-right">{{result_data.medium}}</h6>
+                                                    <div class="progress m-t-30  m-b-20" style="height: 6px;">
+                                                        <div class="progress-bar progress-c-theme2" role="progressbar"
+                                                                style="width: 0%;" aria-valuenow="medium" aria-valuemin="0"
+                                                                aria-valuemax="100"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xl-12">
+                                                    <h6 class="align-items-center float-left"><i
+                                                            class="fas fa-lock f-10 m-r-10 text-c-darkgreen"></i>Low Risks</h6>
+                                                    <h6 id="progress-low" class="align-items-center float-right">{{result_data.very_low}}</h6>
+                                                    <div class="progress m-t-30  m-b-20" style="height: 6px;">
+                                                        <div class="progress-bar progress-c-theme2" role="progressbar" style="width:0;"
+                                                                aria-valuenow="low" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xl-12">
+                                                    <h6 class="align-items-center float-left"><i
+                                                            class="fas fa-lock f-10 m-r-10 text-c-green"></i>Very Low Risks</h6>
+                                                    <h6 id="progress_very_low" class="align-items-center float-right">{{result_data.very_low}}</h6>
+                                                    <div class="progress m-t-30  m-b-20" style="height: 6px;">
+                                                        <div class="progress-bar progress-c-theme2" role="progressbar" style="width:0;"
+                                                                aria-valuenow="very_low" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5>Quesions & Controls</h5>
+                                          </div>
+                                        <div class="card-block border-bottom">
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-auto">
+                                                    <i class="feather icon-edit f-30 text-c-yellow"></i>
+                                                </div>
+                                                <div class="col">
+                                                    <h3 class="f-w-300">130</h3>
+                                                    <span class="d-block text-uppercase">TOTAL NUMER of QUESTIONS</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-block">
+                                            <div class="row d-flex align-items-center">
+                                                <div class="col-auto">
+                                                    <i class="feather icon-check-circle f-30 text-c-blue"></i>
+                                                </div>
+                                                <div class="col">
+                                                    <h3 class="f-w-300">57</h3>
+                                                    <span class="d-block text-uppercase">TOTAL NUMBER of SECURITY CONTROLS</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                                <!--[  Final risk section ] end-->
+
+                                 <!--[ Risk Tree ] start-->
+                                 <div class="col-xl-7 col-md-6">
+                                    <div class="card" >
+                                        <div class="card card-body">
+                                            <h4 style="text-align:center">SUPPLY CHAIN RISK TREE</h4>
+                                            <span class="d-block" style="text-align:center">Click on the node in the risk tree to see a more detailed path of the SC risk.</span>
+                                            <div id="tree-container"></div>
+                                    </div>
+                                </div>
+                                </div>
+                                <!--[ Risk Tree ] end-->
+                                <!--[ Risk Results Bar CHart] start
+                                <div class="col-xl-7 col-md-5">
+                                    <div class="card Recent-Users">
+                                      <div class="card-block px-0 py-3" >
+                                        <div class="card-header">
+                                          <h5>Risk Results </h5>
+                                        </div>
+                                        <div class="card-body">
+
+                                                <canvas id="chartBar"  ></canvas>
+
+                                        </div>
+                                      </div>
+                                    </div>
+
+
+                                </div>-->
+                            <!-- [ Main Content ] end -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- [ Main Content ] end -->
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4"></script>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="{% static '/assets/js/index-page.js' %}" defer></script>
+
+
+{% endblock javascripts %}
+

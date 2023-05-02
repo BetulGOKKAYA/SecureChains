@@ -1,0 +1,3 @@
+text,risk_group,asset_type,question_type,question_group,value_type,question_number,threat_type
+IoT infra,Infrastructure Questionnaire,IoT,GENERAL,none,ASSET,asset_1,none
+THIRD-PARTY SOFTWARE,Infrastructure Questionnaire,THIRD-PARTY SOFTWARE,GENERAL,none,ASSET,asset_2,none

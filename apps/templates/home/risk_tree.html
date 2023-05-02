@@ -1,0 +1,113 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block title %} Risk Tree Page{% endblock %} 
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}
+<style>
+    svg {
+      display: block;
+      margin: auto;
+    }
+    
+    .node circle {
+      fill: #BCED91;
+      stroke-width: 15.5px;
+    }
+    .node text {
+    font: 10px sans-serif;
+    }   
+    .node--internal circle {
+  fill: #555;
+}
+.node--internal text {
+  text-shadow: 0 1px 0 #fff, 0 -1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff;
+}
+.link {
+  fill: none;
+  stroke: #555;
+  stroke-opacity: 0.4;
+  stroke-width: 1.5px;
+}
+.node {
+  cursor: pointer;
+}
+.node circle {
+  fill: #999;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+.node text {
+  font: 10px sans-serif;
+}
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 1.5px;
+    }
+    
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+
+<!-- [ Main Content ] start -->
+<div class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+      <div class="pcoded-content">
+          <div class="pcoded-inner-content">
+              <div class="main-body">
+                  <div class="page-wrapper">
+                      <!-- [ Main Content ] start -->
+                      <div class="row">
+                        <div class="col-sm-12">
+                        <div class="slider-container">
+                          <!-- Add a title for the slider -->
+                          <h4>Adjust Tree Size:</h4>
+                          <input type="range" min="10" max="100" value="100" class="slider" id="myRange">
+                          <p>Zoom: <span id="slider-value"></span>%</p>
+                        </div>
+                      </div>
+                          <div class="col-sm-12">
+                              <div class="card">
+                                  <div class="card-header">
+                                      <h5>Risk Tree for Supply Chain Risk</h5>
+                                  </div>
+                                  <div class="card-block border-bottom">
+                                      <div class="row d-flex align-items-left">
+                                          <div class="col">
+                                              <div style="max-width: 100%; max-height: 800px; overflow-x: auto; overflow-y: scroll; white-space: nowrap;">
+                                                  <div id="tree-container"></div>
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                      <!-- [ Main Content ] end -->
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+
+
+<!-- [ Main Content ] end -->
+
+
+
+{% endblock content %}
+
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+   
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4"></script>
+<script src="http://d3js.org/d3.v4.min.js"></script>
+<script src="{% static '/assets/js/risk-tree.js' %}" defer></script>
+
+
+{% endblock javascripts %}
+
