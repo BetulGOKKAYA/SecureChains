@@ -7,7 +7,7 @@ SecureChains is a software tool developed in Django, designed to help SMEs and l
 Instructions on how to install SecureChains, including any prerequisites or dependencies.
 
 ### Prerequisites
-List any prerequisites required to install and run SecureChains.
+Refer to requirements.txt file
 
 ### Installing SecureChains
 Step-by-step guide on how to install SecureChains on the user's system.
@@ -27,14 +27,9 @@ Explanation of how to interpret the risk assessment results, including the risk 
 ### Step 4: Mitigation Strategies
 Information on how to access and use the mitigation strategies provided by SecureChains.
 
-## Contributing
-Guidelines for how others can contribute to the SecureChains project.
-
 ## License
-Details of the project's license.
+--
 
 ## Contact
-Your contact information for users with further questions or contributions.
+Further contact adress: betul.gokkaya@soton.ac.uk
 
-## Acknowledgments
-Credits to any contributors or third-party resources used in the development of SecureChains.
