@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 {% load static %}
-{% block title %} UI Badges {% endblock %} 
+{% block title %} UI Badges {% endblock %}
 
 <!-- Specific CSS goes HERE -->
 {% block stylesheets %}{% endblock stylesheets %}
@@ -19,7 +19,7 @@
                         <div class="page-block">
                             <div class="row align-items-center">
                                 <div class="col-md-12">
-                                    <div class="page-header-title"> 
+                                    <div class="page-header-title">
                                     </div>
                                     <ul class="breadcrumb">
                                         <li class="breadcrumb-item"><a href="/"><i class="feather icon-home"></i></a></li>
@@ -29,7 +29,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- [ breadcrumb ] end -->
                     <div class="main-body">
                         <div class="page-wrapper">
@@ -43,17 +43,20 @@
                                         </div>
                                         <div id="save-box">
                                         </div>
-                                        
+
                                         <form id="risk-form" class="mt-3 mb-3">
                                             {% csrf_token %}
+                                            <a href="{% url 'home' %}" id="dashboard-btn" class="btn btn-outline-info mt-3" >go dashboard</a>
+                                            <div id="risk-box">
+
+                                            </div>
+
                                             <button type="submit" class="btn btn-outline-success modal-button mt-3"
                                             data-toggle="modal"
                                             data-target="#StartModal" id="submit-btn">save</button>
-                                            <a href="{% url 'home' %}" id="dashboard-btn" class="btn btn-outline-info mt-3" >go dashboard</a>
-                                           
-                                            <div id="risk-box">
-                                               
-                                            </div>  
+
+
+
 
                                             <!-- Modal start-->
                                             <div class="modal fade" id="StartModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -74,15 +77,15 @@
                                             </div>
                                             </div>
                                             <!-- Modal end-->
-                                            
-                                            
+
+
                                         </form>
                                         <div id="result-box"></div>
- 
+
 
 
                                     </div>
-                                   
+
                                 </div>
                                 <!-- [ badge ] end -->
                             </div>
@@ -96,12 +99,12 @@
     </div>
     <!-- [ Main Content ] end -->
 
-    
+
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
-<script src="{% static '/assets/js/risk-questions.js' %}" defer></script> 
+<script src="{% static '/assets/js/risk-questions.js' %}" defer></script>
 {% endblock javascripts %}
 
 
