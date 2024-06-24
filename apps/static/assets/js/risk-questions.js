@@ -11,9 +11,9 @@ const infoBtn = document.getElementById('btn-info')
 const infoText = "Information about the question";
 const div = document.createElement('div');
 
- 
-  
-// Make a GET request to the server to fetch question data from view.py 
+
+
+// Make a GET request to the server to fetch question data from view.py
 $.ajax({
     type: 'GET',
     url: `${url}data/`,
@@ -25,7 +25,7 @@ $.ajax({
         // Loop through each question and its answers
         data.forEach(el => {
             for (const [question, answers] of Object.entries(el)){
- 
+
                  // Add question to the DOM
                 riskBox.innerHTML += `
                     <hr>
@@ -40,63 +40,75 @@ $.ajax({
                     if(key==question){
                       // Add info button to the DOM
                         riskBox.innerHTML += `
-                        <div class="mb-2"> 
+                        <div class="mb-2">
                         <button type="button" class="info-button" id="${value}" ><b>i</b></button>
                         </div>
                         `
                     }
-        
- 
+
+
                 }
             });
             // Loop through answers and add them to the DOM
-            answers.forEach(answer=>{
-                riskBox.innerHTML += `
-                    <div>
-                        <input type="radio" class="ans" id="${question}-${answer}" name="${question}" value="${answer}">
-                        <label for="${question}">${answer}</label>
-                       
-                    </div>
-                `
-            })
-                
+            answers.forEach(answer => {
+              riskBox.innerHTML += `
+                  <div>
+                      <input type="radio" class="ans" id="${question}-${answer}" name="${question}" value="${answer}" data-checked="false">
+                      <label for="${question}">${answer}</label>
+                  </div>
+              `;
+          })
+
+
+
 
 
             }
         });
 
-        
+        const radioButtons = document.querySelectorAll('.ans');
+        radioButtons.forEach(radioButton => {
+            radioButton.addEventListener('click', function () {
+                if (this.dataset.checked === "true") {
+                    this.checked = false;
+                    this.dataset.checked = "false";
+                } else {
+                    this.dataset.checked = "true";
+                }
+            });
+        });
+
        // Attach event listeners to info buttons for displaying additional information
         const infoButton = document.querySelectorAll('.info-button');
-        infoButton.forEach(button => { 
+        infoButton.forEach(button => {
             button.addEventListener('click', () => {
                 const id = button.id;
-                const metadata = response.metadata; 
- 
- 
+                const metadata = response.metadata;
+
+
                 let info;
                 // Find the corresponding info for the clicked button
                 for (const [key, value] of Object.entries(metadata)) {
- 
+
                     if(key==id)
                     console.log("oldu dadsa");
                     else
                     info = id
 
-                  } 
+                  }
 
                   alert(`${info}`);
               });
           });
- 
-        
+
+
     },
     error: function(error){
         console.log(error)
     }
 })
 
- 
+
 
 
 const riskForm = document.getElementById('risk-form')
@@ -120,15 +132,15 @@ const allQuestionsAnswered = (elements) => {
 };
 
 
- 
+
 // Function to send form data to the server
 const sendData = () => {
     const elements = [...document.getElementsByClassName("ans")];
     const data = {};
     data["csrfmiddlewaretoken"] = csrf[0].value;
 
-    
-    
+
+
     elements.forEach((el) => {
       if (el.checked) {
         data[el.name] = el.value;
@@ -138,12 +150,9 @@ const sendData = () => {
         }
       }
     });
-  
-    if (!allQuestionsAnswered(elements)) {
-      alert("Please answer all questions before submitting.");
-      return;
-    }
-  
+
+
+
     // Send form data to the server
     $.ajax({
       type: "POST",
@@ -151,15 +160,15 @@ const sendData = () => {
       data: data,
       success: function(response){
         _url: `${url}data/`
-
-        window.location.replace(_url)    
+          console.log(data)
+        window.location.replace(_url)
       },
       error: function (error) {
         console.log(error);
       },
     });
   };
-  
+
 
 
 
@@ -182,10 +191,7 @@ startBtn.addEventListener("click", () => {
     return;
   }
 
-  if (!allQuestionsAnswered(elements)) {
-    alert("Please answer all questions before submitting.");
-    return;
-  } else {
+  else {
     sendData();
   }
 });
