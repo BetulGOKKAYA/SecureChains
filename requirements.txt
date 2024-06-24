@@ -11,4 +11,5 @@ whitenoise
 django-environ 
 django-allauth 
 django-sslserver
-
+requests
+requests_oauthlib
