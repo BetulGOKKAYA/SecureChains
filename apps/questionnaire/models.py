@@ -16,7 +16,7 @@ ASSET_TYPE_CHOICES = (
     ('SOFTWARE HOSTED on ORGANIZATION MACHINES', 'SOFTWARE HOSTED on ORGANIZATION MACHINES'),
     ('INTERNAL USER', 'INTERNAL USER'),
     ('EXTERNAL USER', 'EXTERNAL USER'),
-  
+
 
 )
 
@@ -31,22 +31,22 @@ QUESTION_TYPE_CHOICES = (
 
 TYPES = (
 
-    ('VULNERABILTY', 'VULNERABILTY'),
+    ('VULNERABILITY', 'VULNERABILITY'),
     ('THREAT', 'THREAT'),
     ('IMPACT', 'IMPACT'),
     ('ASSET', 'ASSET'),
 
 )
 
- 
+
 
 ASSESSMENT_STATUS_TYPES = (
 
     ('ACTIVE', 'ACTIVE'),
-    ('PASSIVE', 'PASSIVE'), 
+    ('PASSIVE', 'PASSIVE'),
 
 )
- 
+
 
 class Risk_Assessment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -71,21 +71,26 @@ def create_risk_assessments(sender, instance, created, **kwargs):
             Risk_Assessment.objects.create(user=instance, **assessment)
 
 class Risk_Questions(models.Model):
-    text = models.CharField(max_length=1500)
+    text = models.CharField(max_length=1500,  unique=True)
+    order = models.PositiveIntegerField(null=True, blank=True)
     risk_group = models.ForeignKey(Security_Risk_Category, on_delete=models.CASCADE)
     asset_type = models.CharField(max_length=50, choices=ASSET_TYPE_CHOICES)
     question_type = models.CharField(max_length=50, choices=QUESTION_TYPE_CHOICES)
     question_group = models.CharField(max_length=850)
+    relative_vul_group = models.CharField(max_length=1000, blank=True, null=True)
     value_type = models.CharField(max_length=50, choices=TYPES)
     question_number = models.CharField(max_length=100)
+    root_risk = models.CharField(max_length=100, blank=True, null=True)
     threat_type = models.CharField(max_length=100, blank=True, null=True)
-    description = models.CharField(max_length=600, blank=True, null=True)
+    perceived_threat = models.CharField(max_length=500, blank=True, null=True)
+    description = models.CharField(max_length=1000, blank=True, null=True)
+    control_nist = models.CharField(max_length=100, blank=True, null=True)
     suggestion = models.CharField(max_length=500, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
 
 
     def __str__(self):
-        return f"{self.asset_type}, {self.threat_type}, {self.question_group}, {self.question_number}"
+        return f"{self.text}, {self.asset_type}, {self.threat_type}, {self.question_group}, {self.question_number}"
 
     class Meta:
         verbose_name_plural = 'Security Risk Questions'
@@ -103,23 +108,26 @@ class User_Answer(models.Model):
     risk_group = models.CharField(max_length=150)
     asset_type = models.CharField(max_length= 50)
     question_group = models.CharField(max_length=850)
+    relative_vul_group = models.CharField(max_length=1000, blank=True, null=True)
     question_type = models.CharField(max_length=50)
     value_type = models.CharField(max_length=150)
+    root_risk = models.CharField(max_length=100, blank=True, null=True)
     question_number = models.CharField(max_length=100)
     threat_type = models.CharField(max_length=100, blank=True, null=True)
+    perceived_threat = models.CharField(max_length=500, blank=True, null=True)
     user_answer = models.CharField(max_length=30)
     created = models.DateTimeField(auto_now_add=True)
 
 
     def __str__(self):
         return f"{self.user}, {self.text},{self.assessment_number}, {self.user_answer}"
-    
+
     class Meta:
         verbose_name_plural = 'User Answers'
 
 
 
- 
+
 
 
 
