@@ -1,4 +1,5 @@
 from django import template
+import ast
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
@@ -7,16 +8,18 @@ from django.urls import reverse
 from apps.risk_categories.models import Security_Risk_Category
 from apps.survey.models import Survey_Questions,Survey_Answers
 from apps.questionnaire.models import Risk_Questions, Risk_Assessment, User_Answer
-from apps.assessment_results.models import Risk_Result, Controls, Main_Risk_Result
+from apps.assessment_results.models import Risk_Result, Control, Main_Risk_Result
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Max
 from django.db.models import Q
-
+import re
 import json
+import csv
+from datetime import datetime
 
- 
- 
+
+
 @login_required(login_url="/login/")
 def index(request):
     categories = Security_Risk_Category.objects.all()
@@ -54,10 +57,10 @@ def index(request):
                 risk_data['user'] = 0
             elif user_answer_user and total_question_number_user!=0:
                 risk_data['user'] = int((user_answer_user/total_question_number_user)*100)
-    
-    
+
+
     context = {
-        'categories': categories, 
+        'categories': categories,
         'risk_data': risk_data,
     }
 
@@ -71,9 +74,9 @@ def index_data(request):
     '''
     user_get = request.user
     results = Risk_Result.objects.filter(user=user_get, active_status='ACTIVE')
- 
-    
-    
+
+
+
     result_data = {
     'very_high': 0,
     'high': 0,
@@ -84,32 +87,32 @@ def index_data(request):
 
     for r in results:
         if r.qualitative_result == 'Very High':
-            result_data['very_high'] += 1 
-        elif r.qualitative_result == 'High':  
-            result_data['high'] += 1 
+            result_data['very_high'] += 1
+        elif r.qualitative_result == 'High':
+            result_data['high'] += 1
         elif r.qualitative_result == 'Medium':
-            result_data['medium'] += 1 
+            result_data['medium'] += 1
         elif r.qualitative_result == 'Low':
-            result_data['low'] += 1 
+            result_data['low'] += 1
         elif r.qualitative_result == 'Very Low':
-            result_data['very_low'] += 1 
+            result_data['very_low'] += 1
 
 
-            
+
 
     data = []
-   
+
     risk_results = Main_Risk_Result.objects.filter(user=user_get, active_status='ACTIVE')
- 
-   
+
+
     context = {
 
         'results': list(results.values()),
-        'result_data': result_data, 
+        'result_data': result_data,
         'jsonData': data,
         'risk_results': list(risk_results.values('name', 'risk_score'))
-    
-    
+
+
     }
 
     return JsonResponse(context)
@@ -117,7 +120,7 @@ def index_data(request):
 
 @login_required(login_url="/login/")
 def category_view(request, pk):
-    categories = Security_Risk_Category.objects.get(pk=pk) 
+    categories = Security_Risk_Category.objects.get(pk=pk)
     return render(request, 'home/risk_questions.html')
 
 
@@ -126,7 +129,7 @@ def category_view(request, pk):
 def change_active_status(request):
     if request.method == 'POST':
         assessment_number = request.POST.get('assessment_number')
-        
+
         # Set all other assessments to 'passive'
         Risk_Assessment.objects.filter(user=request.user).update(active_status='PASSIVE')
 
@@ -195,25 +198,22 @@ def create_new_risk(request):
 
 @login_required(login_url="/login/")
 def questions_data_view(request, pk):
-    category = Security_Risk_Category.objects.get(pk=pk) 
-    question_ = Risk_Questions.objects.filter(risk_group=category)
+    category = Security_Risk_Category.objects.get(pk=pk)
+    filtered_questions = Risk_Questions.objects.filter(risk_group=category).order_by('suggestion')
     group= str(category)
-    group = n_category.split(',', 1)[0]
-    
- 
-    
+
     user_answer = []
     asset_list = []
     user_get = request.user
     user_answer = list(User_Answer.objects.filter(user=user_get,  active_status='ACTIVE').values_list('text', flat=True))
     answers = User_Answer.objects.filter(user=user_get,risk_group='Infrastructure Questionnaire', active_status='ACTIVE')
- 
+
     questions = []
     information = []
     likelihood = ["Very Low", "Low", "Medium", "High", "Very High"]
     impact = ["Very Low", "Low", "Medium", "High", "Very High"]
-    general = ["Yes", "No"] 
-    
+    general = ["Yes", "No"]
+
 
     '''
     Below code eliminates the question based on the user answer which is related to organization assets. For
@@ -225,39 +225,40 @@ def questions_data_view(request, pk):
         for a in answers:
             if a.asset_type and a.user_answer=='Yes':
                 asset_list.append(a.asset_type )
-    
+
+
+
     if group == 'Infrastructure Questionnaire':
-        for q in question_:
+        for q in filtered_questions:
             if(q.question_type=="GENERAL"):
                 questions.append({str(q.text): general})
                 information.append({str(q.text): str(q.description)})
- 
-    for a in asset_list:
-        for q in question_:
-            if(q.question_type=="LIKELIHOOD" and a == q.asset_type):
+
+
+    for q in filtered_questions:
+        if q.asset_type in asset_list:
+            if q.question_type == "LIKELIHOOD":
                 questions.append({str(q.text): likelihood})
                 information.append({str(q.text): str(q.description)})
-            elif(q.question_type=="IMPACT" and a == q.asset_type):
+            elif q.question_type == "IMPACT":
                 questions.append({str(q.text): impact})
                 information.append({str(q.text): str(q.description)})
+            elif group == 'Infrastructure Questionnaire' and q.question_type == "GENERAL":
+                questions.append({str(q.text): general})
+                information.append({str(q.text): str(q.description)})
 
-            
 
-    # Only shows the questions that users haven't answered yet  
-    if user_answer:
-        for ans in user_answer:  
-            for user_q in questions:
-                if(next(iter(user_q)) == str(ans)):  
-                    questions.remove(user_q) 
 
- 
-    
+    questions = [q for q in questions if next(iter(q)) not in user_answer]
+
 
     return JsonResponse({
         'data': questions,
         'metadata': information,
     })
 
+def normalize_string(s):
+    return re.sub(r'\s+', ' ', s.strip())
 
 @login_required(login_url="/login/")
 def questions_data_save(request, pk):
@@ -268,66 +269,140 @@ def questions_data_save(request, pk):
         #print(type(data)) -> type(data) is to see what type the data is in command line
         #result of above line is: <class 'django.http.request.QueryDict'>
         #this is a querydict, and we need to turn that one into regular python dic with below code line
-        data_ = dict(data.lists()) 
+        data_ = dict(data.lists())
+
         active_risk_assessment = Risk_Assessment.objects.filter(Q(user=request.user) & Q(active_status='ACTIVE')).first()
         active_value =  active_risk_assessment.assessment_number
 
         data_.pop('csrfmiddlewaretoken')#data value has csrfmiddlewaretoken which we can remove with this code in order to have result data
 
-     
+
         for k in data_.keys(): #keys are QUESTION
             question = Risk_Questions.objects.get(text=k) #with (text=k) we can bring all question related with their text
             x = str(question.risk_group)
             riskGroup = x.split(',', 1)[0]
             #riskGroup = x.split(',')[0].split()[0]
             questions.append(question)
-         
+
         user = request.user
         risk = Security_Risk_Category.objects.get(pk=pk)
-        results = []  
+        results = []
         for q in questions:
             a_selected = request.POST.get(q.text)
             if a_selected != "":
-                User_Answer.objects.create(user=user, text=q.text, assessment_number=active_value, active_status='ACTIVE', risk_group = riskGroup, asset_type = q.asset_type, question_group =q.question_group, question_type=q.question_type, value_type=q.value_type, question_number=q.question_number, threat_type=q.threat_type, user_answer = a_selected)
+                User_Answer.objects.create(user=user, text=q.text, assessment_number=active_value, active_status='ACTIVE', risk_group = riskGroup, asset_type = q.asset_type, question_group =q.question_group,relative_vul_group=q.relative_vul_group, question_type=q.question_type, value_type=q.value_type, root_risk=q.root_risk, question_number=q.question_number, threat_type=q.threat_type, perceived_threat=q.perceived_threat, user_answer = a_selected)
+                save_to_csv("NO", user.username, q.text, a_selected, riskGroup, q.asset_type)
 
-        vulnerability_list = []
+
+        relative_vul = []
         single_vul = None
         is_Assest = None
         vulnerability_score = None
+        rootThreat = None
+        rootVul = []
+        rootImpact = None
 
         '''
-        The below code snipped calculates the cumulative vulnerability valuse. If we have more than one vulnerability for a specific threat, 
-        then the code provide overal vulnerability level. 
+        The below code snipped calculates the cumulative vulnerability valuse. If we have more than one vulnerability for a specific threat,
+        then the code provide overal vulnerability level.
         '''
-    
+
         answers = User_Answer.objects.filter(user=user,active_status='ACTIVE')
 
-    
-        for a in answers:
-                if (a.value_type == "IMPACT"):   
-                    for t in answers:   
-                        if (a.question_group == t.question_group and t.value_type == "THREAT"):
-                            if True:
-                                for v in answers:
-                                    if t.question_group == v.question_group and v.value_type=='VULNERABILTY' and v.question_number!='vul_101':
-                                        vulnerability_list.append(v.user_answer)
-                                    if t.question_group == v.question_group and v.value_type=='VULNERABILTY' and v.question_number=='vul_101':
-                                        single_vul= v.user_answer
-                                if len(vulnerability_list) == 1:
-                                    single_vul = vulnerability_list[0]
-                                if not single_vul:
-                                    multi_vul_value = value_multiplication(vulnerability_list)
-                                    vulnerability_score = multi_vul_value
-                                    event_likely = get_event_values(t.user_answer,multi_vul_value)
-                                elif single_vul:
-                                    vulnerability_score = single_vul
-                                    event_likely = get_event_values(t.user_answer,single_vul)
-                            final_result = get_event_values(a.user_answer,event_likely) 
-                            existing_risk_result = Risk_Result.objects.filter(question_group=t.question_group, active_status='ACTIVE',).first()
-                            if not existing_risk_result:
-                                Risk_Result.objects.create(user=user, risk_group=t.risk_group, assessment_number=active_value, active_status='ACTIVE', asset_type=t.asset_type, question_group = t.question_group, threat_score=t.user_answer, impact_score=a.user_answer, vulnerability_score=vulnerability_score, even_likelihood=event_likely, qualitative_result=final_result, quantitative_result='bos')
+        # Group answers by question_group
+        grouped_answers = {}
+        for answer in answers:
+            if answer.question_group not in grouped_answers:
+                grouped_answers[answer.question_group] = {}
+            if answer.value_type == "IMPACT":
+                grouped_answers[answer.question_group]['IMPACT'] = answer
+            elif answer.value_type == "THREAT":
+                grouped_answers[answer.question_group]['THREAT'] = answer
+
+        # Process each group
+        for question_group, grouped_answer in grouped_answers.items():
+            rootVul = []
+
+            impact_answer = grouped_answer.get('IMPACT')
+            threat_answer = grouped_answer.get('THREAT')
+
+            if not (impact_answer and threat_answer):
+                # If either IMPACT or THREAT answer is missing, skip the group
+                continue
+
+            rootImpact = impact_answer.root_risk
+            rootThreat = threat_answer.root_risk
+
+
+            if threat_answer.relative_vul_group:
+                relative_vul = [item.strip() for item in threat_answer.relative_vul_group.split(',')]
+            else:
+                relative_vul = []
+
+            multi_vulnerability_score = []
+
+            for v in answers:
+                if v.relative_vul_group in relative_vul and v.value_type == "VULNERABILITY":
+                    multi_vulnerability_score.append(v.user_answer)
+                    rootVul.append(v.root_risk)
+
+
+
+            is_single_vul = len(multi_vulnerability_score) == 1
+
+
+
+            # Proceed with your existing logic
+            if is_single_vul:
+                # If there's effectively one unique vulnerability, use its score directly
+                vulnerability_score = multi_vulnerability_score[0]
+            else:
+                # If there are multiple unique vulnerabilities, aggregate their scores
+                multi_vul_value = compute_value(multi_vulnerability_score)
+                vulnerability_score = multi_vul_value
+
+
+            # Calculate event likely for both cases, as it depends on vulnerability_score
+            event_likely = get_event_values(threat_answer.user_answer, vulnerability_score)
+
+
+
+
+
+            multi_vulScore = '; '.join([item for item in multi_vulnerability_score if item.strip()])
+            rootVul_string = '; '.join([item for item in rootVul if item.strip()])
+            final_result = get_event_values(impact_answer.user_answer, event_likely)
+
+            # Update or create Risk_Result entry
+            Risk_Result.objects.update_or_create(
+                user=user,
+                question_group=question_group,
+                active_status='ACTIVE',
+                defaults={
+                    'risk_group': threat_answer.risk_group,
+                    'assessment_number': active_value,
+                    'asset_type': threat_answer.asset_type,
+                    'multi_vulnerability_score': multi_vulScore,
+                    'threat_score': threat_answer.user_answer,
+                    'root_threat': rootThreat,
+                    'impact_score': impact_answer.user_answer,
+                    'root_impact': rootImpact,
+                    'vulnerability_score': vulnerability_score,
+                    'multi_relative_vul_group': relative_vul,
+                    'root_vulnerability': rootVul_string,
+                    'event_likelihood': event_likely,
+                    'qualitative_result': final_result,
+                    'quantitative_result': 'bos',
+                    'threat_type': threat_answer.threat_type,
+                    'perceived_threat': threat_answer.perceived_threat
+                }
+            )
+
+
+
 
         mainRisks = Risk_Result.objects.filter(user=user,active_status='ACTIVE')
+
 
         risk_data = {
         'COMPANY HARDWARE': [],
@@ -343,12 +418,12 @@ def questions_data_save(request, pk):
         'User Risk': []
 
         }
-        print(mainRisks)
-        if mainRisks: 
-            for m in mainRisks: 
+
+        if mainRisks:
+            for m in mainRisks:
                 if m.asset_type in risk_data:
                     risk_data[m.asset_type].append(m.qualitative_result)
-                    if m.risk_group == 'Software Risk': 
+                    if m.risk_group == 'Software Risk':
                         risk_data[m.risk_group].append(m.qualitative_result)
                         risk_data['Supply Chain RISK'].append(m.qualitative_result)
                     elif m.risk_group == 'Hardware Risk':
@@ -357,32 +432,31 @@ def questions_data_save(request, pk):
                     elif m.risk_group == 'User Risk':
                         risk_data[m.risk_group].append(m.qualitative_result)
                         risk_data['Supply Chain RISK'].append(m.qualitative_result)
-                    
-               
-            
+
+
             for asset_type, qualitative_results in risk_data.items():
                 if qualitative_results:
                     # Check if a Main_Risk_Result with the same asset_type already exists
                     existing_main_risk_result = Main_Risk_Result.objects.filter(user=user, name=asset_type, active_status='ACTIVE').first()
                     if existing_main_risk_result:
                         # Update the existing Main_Risk_Result object
-                        existing_main_risk_result.risk_score = value_multiplication(qualitative_results)
+                        existing_main_risk_result.risk_score = calculate_aggregate_risk(qualitative_results)
                         existing_main_risk_result.save()
                     else:
                         # Create a new Main_Risk_Result object
-                        Main_Risk_Result.objects.create(user=user, 
-                            name=asset_type, assessment_number=active_value, active_status='ACTIVE', risk_score=value_multiplication(qualitative_results)
-                        ) 
+                        Main_Risk_Result.objects.create(user=user,
+                            name=asset_type, assessment_number=active_value, active_status='ACTIVE', risk_score=calculate_aggregate_risk(qualitative_results)
+                        )
 
     return JsonResponse({
         'editdata': "questions",
     })
 
- 
+
 @login_required(login_url="/login/")
 def user_answer(request, pk):
 
-    categories = Security_Risk_Category.objects.get(pk=pk)  
+    categories = Security_Risk_Category.objects.get(pk=pk)
     return render(request, 'home/risk_questions_edit.html', {'obj': categories})
 
 
@@ -398,21 +472,21 @@ def user_answer_edit(request, pk):
     answers = []
     likelihood = ["Very Low", "Low", "Medium", "High", "Very High"]
     impact = ["Very Low", "Low", "Medium", "High", "Very High"]
-    general = ["Yes", "No"]  
-    
+    general = ["Yes", "No"]
 
-    
+
+
     for q in user_answer:
-        if(q.question_type=="LIKELIHOOD"): 
+        if(q.question_type=="LIKELIHOOD"):
             questions.append({str(q.text): {'answer': likelihood, 'user_answer': q.user_answer}})
         elif(q.question_type=="IMPACT"):
             questions.append({str(q.text): {'answer': impact, 'user_answer': q.user_answer}})
         elif(q.question_type=="GENERAL"):
             questions.append({str(q.text): {'answer': general, 'user_answer': q.user_answer}})
- 
 
 
-   
+
+
 
     return JsonResponse({
         'data': questions
@@ -438,7 +512,6 @@ def user_new_answer_save(request, pk):
         risk = Security_Risk_Category.objects.get(pk=pk)
 
         results = []
-        vulnerability_list = []
         single_vul = None
         resultQualitative = ''
 
@@ -448,38 +521,86 @@ def user_new_answer_save(request, pk):
                 t = User_Answer.objects.filter(user=user_get, text=q.text, active_status='ACTIVE').first()
                 if t:
                     t.user_answer = a_selected
-                    if(t.value_type != "GENERAL"):
+                    if (t.value_type == "VULNERABILITY"):
+                        risk_all = Risk_Result.objects.filter(user=user_get, active_status='ACTIVE')
+
+                        changed_vulnerability = t.relative_vul_group
+
+                        for r in risk_all:
+                            multi_relative_vul_group = ast.literal_eval(r.multi_relative_vul_group)
+                            if changed_vulnerability in multi_relative_vul_group:
+                                position = multi_relative_vul_group.index(changed_vulnerability)
+                                multi_vulnerability_score = r.multi_vulnerability_score.split('; ')
+                                if position < len(multi_vulnerability_score):
+                                    multi_vulnerability_score[position] = t.user_answer
+                                    r.multi_vulnerability_score = '; '.join(multi_vulnerability_score)
+                                    new_vul_score = compute_value(multi_vulnerability_score)
+                                    r.vulnerability_score = new_vul_score
+                                    event_likely = get_event_values(new_vul_score, r.threat_score)
+                                    resultQualitative = get_event_values(event_likely, r.impact_score)
+                                    r.event_likelihood = event_likely
+                                    r.qualitative_result = resultQualitative
+                                    r.save()
+                                else:
+                                    print(f"Index {position} out of range for multi_vulnerability_score")
+                    if(t.value_type != "GENERAL" and t.value_type != "VULNERABILITY"):
                         r = Risk_Result.objects.filter(user=user_get, question_group=q.question_group, active_status='ACTIVE').first()
                         if r:
                             if (t.value_type == "IMPACT"):
-                                resultQualitative = get_event_values(r.even_likelihood, t.user_answer)
+                                resultQualitative = get_event_values(r.event_likelihood, t.user_answer)
                                 r.qualitative_result = resultQualitative
                                 r.impact_score = t.user_answer
                             elif (t.value_type == "THREAT"):
                                 resultEvent = get_event_values(r.vulnerability_score, t.user_answer)
                                 resultQualitative = get_event_values(resultEvent, r.impact_score)
+                                r.event_likely = resultEvent
                                 r.qualitative_result = resultQualitative
                                 r.threat_score = t.user_answer
-                            elif (t.value_type == "VULNERABILTY"):
-                                for v in answers:
-                                    if t.question_group == v.question_group and v.value_type == "VULNERABILTY" and t.question_number != 'vul_101':
-                                        single_vul = True
-                                        if t.question_number != v.question_number:
-                                            vulnerability_list.append(v.user_answer)
-                                        else:
-                                            vulnerability_list.append(t.user_answer)
-                                    if t.question_group == v.question_group and v.value_type == 'VULNERABILTY' and v.question_number == 'vul_101':
-                                        r.vulnerability_score = t.user_answer
-                                        resultEvent = get_event_values(v.user_answer, r.threat_score)
-                                        resultQualitative = get_event_values(resultEvent, r.impact_score)
-                                if single_vul:
-                                    multi_vul_value = value_multiplication(vulnerability_list)
-                                    r.vulnerability_score = multi_vul_value
-                                    event_likely = get_event_values(multi_vul_value, r.threat_score)
-                                    resultQualitative = get_event_values(event_likely, r.impact_score)
-                                r.qualitative_result = resultQualitative
                     t.save()
+                    save_to_csv("YES", user.username, q.text, a_selected, q.risk_group, q.asset_type)
                     r.save()
+
+        mainRisks = Risk_Result.objects.filter(user=user,active_status='ACTIVE')
+
+        risk_data = {
+        'COMPANY HARDWARE': [],
+        'USER ELECTRONICS': [],
+        'IoT': [],
+        'THIRD-PARTY SOFTWARE': [],
+        'SOFTWARE HOSTED on ORGANIZATION MACHINES': [],
+        'INTERNAL USER': [],
+        'EXTERNAL USER': [],
+        'Supply Chain RISK': [],
+        'Software Risk': [],
+        'Hardware Risk': [],
+        'User Risk': []
+
+        }
+        if mainRisks:
+            for m in mainRisks:
+                if m.asset_type in risk_data:
+                    risk_data[m.asset_type].append(m.qualitative_result)
+                    if m.risk_group == 'Software Risk':
+                        risk_data[m.risk_group].append(m.qualitative_result)
+                        risk_data['Supply Chain RISK'].append(m.qualitative_result)
+                    elif m.risk_group == 'Hardware Risk':
+                        risk_data[m.risk_group].append(m.qualitative_result)
+                        risk_data['Supply Chain RISK'].append(m.qualitative_result)
+                    elif m.risk_group == 'User Risk':
+                        risk_data[m.risk_group].append(m.qualitative_result)
+                        risk_data['Supply Chain RISK'].append(m.qualitative_result)
+
+
+
+            for asset_type, qualitative_results in risk_data.items():
+                if qualitative_results:
+                    # Check if a Main_Risk_Result with the same asset_type already exists
+                    existing_main_risk_result = Main_Risk_Result.objects.filter(user=user, name=asset_type, active_status='ACTIVE').first()
+                    if existing_main_risk_result:
+                        # Update the existing Main_Risk_Result object
+                        existing_main_risk_result.risk_score = calculate_aggregate_risk(qualitative_results)
+                        existing_main_risk_result.save()
+
 
     return JsonResponse({
         'editdata': "questions",
@@ -487,9 +608,8 @@ def user_new_answer_save(request, pk):
 
 
 @login_required(login_url="/login/")
-def risk_result_view(request, data): 
+def risk_result_view(request, data):
     user_get = request.user
-    print(data)
     if data=='hardware':
         riskGroup = 'Hardware Risk'
     elif data=='software':
@@ -498,36 +618,62 @@ def risk_result_view(request, data):
         riskGroup = 'User Risk'
 
     results = Risk_Result.objects.filter(user=user_get, active_status='ACTIVE', risk_group=riskGroup)
-    print(results)
-    
+    for result in results:
+        scores = [s.strip() for s in result.multi_vulnerability_score.split(';')]
+        vulnerabilities = result.root_vulnerability.split(';')
+        result.vulnerability_data = list(zip(scores, vulnerabilities))
+
+
+
     context = {
 
-        'results': results, 
-    
-    
+        'results': results,
+
+
     }
 
     return render(request, 'home/risk-results.html', context)
 
 
+def save_to_csv(isupdated, username, question_text, answer, riskgroup, a_type):
+    csv_path = 'user_answers.csv'
+
+    # Check if the file exists. If not, create it and write the headers.
+    try:
+        with open(csv_path, 'x', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["IsUpdated", "User Name", "Question Text", "User Answer","Risk Group", "Asset Type" "Timestamp"])
+            print("New CSV file created.")
+    except FileExistsError:
+        pass
+
+    # Append the user's answer to the CSV file
+    try:
+        with open(csv_path, 'a', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Current timestamp
+            writer.writerow([isupdated, username, question_text, answer, riskgroup, a_type, timestamp])
+    except Exception as e:
+        print(f"Error writing to CSV: {e}")
+
 @login_required(login_url="/login/")
-def risk_tree_view(request): 
-    
+def risk_tree_view(request):
+
 
     return render(request, 'home/risk_tree.html')
 
 
 @login_required(login_url="/login/")
-def risk_tree_data(request): 
+def risk_tree_data(request):
     user_get = request.user
-    results = Risk_Result.objects.filter(user=user_get, active_status='ACTIVE') 
-    hierarchical_data = create_hierarchical_data(request, results)  
-   
+    results = Risk_Result.objects.filter(user=user_get, active_status='ACTIVE')
+    hierarchical_data = create_hierarchical_data(request, results)
+
     context = {
 
         'results': list(results.values()),
         'hierarchical_data': hierarchical_data
-       
+
     }
 
     return JsonResponse(context)
@@ -618,12 +764,19 @@ def risk_control_view(request, pk):
 
     results = Risk_Result.objects.filter(pk=pk)
     grpup_type = result.question_group
+    control = Control.objects.all()
 
-    control = Controls.objects.filter(risk_group=grpup_type)
+
+    for result in results:
+        scores = [s.strip() for s in result.multi_vulnerability_score.split(';')]
+        vulnerabilities = result.root_vulnerability.split(';')
+        vul_groups = [vg.replace("'", "").replace("[", "").replace("]", "").strip() for vg in result.multi_relative_vul_group.split(',')]
+        result.control_data = list(zip(scores, vulnerabilities, vul_groups))
+
 
     context = {
         'controls': control,
-        'riskResult': results,
+        'results': results,
     }
 
     return render(request, 'home/control-results.html', context)
@@ -634,45 +787,94 @@ def qualitative_result(likelihood, impact):
     this method calculates the risk result
     """
     risk_mapping = {
-        ("Very Likely", "Low"): "Medium",
-        ("Very Likely", "Medium"): "High",
-        ("Very Likely", "High"): "Critical",
-        ("Very Likely", "Critical"): "Critical",
-        ("Highly Likely", "Low"): "Medium",
-        ("Highly Likely", "Medium"): "Medium",
-        ("Highly Likely", "High"): "High",
-        ("Highly Likely", "Critical"): "Critical",
-        ("Mediumly Likely", "Low"): "Low",
-        ("Mediumly Likely", "Medium"): "Medium",
-        ("Mediumly Likely", "High"): "High",
-        ("Mediumly Likely", "Critical"): "High",
-        ("Unlikely", "Low"): "Low",
-        ("Unlikely", "Medium"): "Low",
-        ("Unlikely", "High"): "Medium",
-        ("Unlikely", "Critical"): "High",
+        ("Very Low", "Very Low"): "Very Low",
+        ("Very Low", "Low"): "Very Low",
+        ("Very Low", "Medium"): "Low",
+        ("Very Low", "High"): "Low",
+        ("Very Low", "Very High"): "Medium",
+        ("Low", "Very Low"): "Very Low",
+        ("Low", "Low"): "Low",
+        ("Low", "Medium"): "Medium",
+        ("Low", "High"): "Medium",
+        ("Low", "Very High"): "High",
+        ("Medium", "Very Low"): "Low",
+        ("Medium", "Low"): "Medium",
+        ("Medium", "Medium"): "Medium",
+        ("Medium", "High"): "Medium",
+        ("Medium", "Very High"): "High",
+        ("High", "Very Low"): "Low",
+        ("High", "Low"): "Medium",
+        ("High", "Medium"): "Medium",
+        ("High", "High"): "High",
+        ("High", "Very High"): "Very High",
+        ("Very High", "Very Low"): "Medium",
+        ("Very High", "Low"): "High",
+        ("Very High", "Medium"): "High",
+        ("Very High", "High"): "Very High",
+        ("Very High", "Very High"): "Very High",
     }
-    
+
     return risk_mapping.get((likelihood, impact), ' ')
 
 
-def value_multiplication(vul_list):
 
 
-    if len(vul_list) < 2:
-        return  vul_list[0]
+def calculate_aggregate_risk(qualitative_values):
+    # Filter out empty strings or spaces
+    filtered_values = [v for v in qualitative_values if v.strip()]
 
-    value_1 = vul_list[0]
-    value_2 = vul_list[1]
-    result = get_event_values(value_1,value_2)
+    # Return early if filtered list is empty or contains a single element
+    if not filtered_values:
+        return "No valid input"  # or return a default value as appropriate
+    if len(filtered_values) == 1:
+        return filtered_values[0]
+
+    # Initialize the result with the first value
+    result = filtered_values[0]
+
+    # Aggregate the rest of the values
+    for i in range(1, len(filtered_values)):
+        result = get_event_values(result, filtered_values[i])
+
+    return result
 
 
-    if len(vul_list) > 2: 
-        for i in range(len(vul_list)):
-           if len(vul_list) > i+2:
-                result = get_event_values(result,vul_list[i+2])
-    
-    return result 
-    
+def compute_value(input_list):
+    if not input_list:
+        return 'No input provided'
+
+    # mapping from strings to integers
+    map_to_int = {
+        'Very Low': 1,
+        'Low': 2,
+        'Medium': 3,
+        'High': 4,
+        'Very High': 5,
+    }
+
+    # mapping from integers to strings
+    map_to_str = {
+        1: 'Very Low',
+        2: 'Low',
+        3: 'Medium',
+        4: 'High',
+        5: 'Very High',
+    }
+
+    # map the strings in the input list to integers and compute the sum
+    total = sum(map_to_int[value] for value in input_list)
+
+    # calculate the average
+    avg = total / len(input_list)
+
+    # round the average to the nearest integer using "round half up" method
+    #avg_rounded = int(avg + 0.5) if avg % 1 >= 0.5 else int(avg)
+    avg_rounded = round(avg)
+
+
+    # map the rounded average back to a string and return it
+    return map_to_str[avg_rounded]
+
 
 def get_event_values(value_1, value_2):
     event_values_mapping = {
@@ -737,31 +939,31 @@ def survey(request):
 
 
 @login_required(login_url="/login/")
-def survey_data_view(request): 
+def survey_data_view(request):
     question_ = Survey_Questions.objects.all()
- 
+
     user_answer = []
     user_get = request.user
     user_answer = list(Survey_Answers.objects.filter(user_name=user_get).values_list('text', flat=True))
-    
-    questions = [] 
+
+    questions = []
     answers = ["1 (Strongly Disagree)", "1 (Disagree)", "3 (Neutral)", "4 (Agree)", "5 (Strongly Agree)"]
 
 
- 
-    for q in question_: 
-        questions.append({str(q.text): answers})  
 
-    # Only shows the questions that users haven't answered yet  
+    for q in question_:
+        questions.append({str(q.text): answers})
+
+    # Only shows the questions that users haven't answered yet
     if user_answer:
-        for ans in user_answer:  
+        for ans in user_answer:
             for user_q in questions:
-                if(next(iter(user_q)) == str(ans)):  
-                    questions.remove(user_q)  
-    
+                if(next(iter(user_q)) == str(ans)):
+                    questions.remove(user_q)
+
 
     return JsonResponse({
-        'data': questions, 
+        'data': questions,
     })
 
 
@@ -781,16 +983,16 @@ def survey_data_save(request):
 
         data_.pop('csrfmiddlewaretoken')#data value has csrfmiddlewaretoken which we can remove with this code in order to have result data
 
-     
+
         for k in data_.keys(): #keys are QUESTION
             question = Survey_Questions.objects.get(text=k) #with (text=k) we can bring all question related with their text
             questions.append(question)
-        
+
         for k in data_.keys(): #keys are QUESTION
             answer = Survey_Answers.objects.get(text=k) #with (text=k) we can bring all question related with their text
             #print(question)
             answers.append(answer)
-         
+
         user = request.user
         if not user_answer:
             for q in questions:
@@ -803,9 +1005,9 @@ def survey_data_save(request):
                 a_selected = request.POST.get(q.text)
                 if a_selected != "":
                     t = Survey_Answers.objects.get(text=q.text)
-                    t.user_answer = a_selected 
+                    t.user_answer = a_selected
                 t.save()
-            
+
 
     return JsonResponse({
         'editdata': "questions",
@@ -814,19 +1016,19 @@ def survey_data_save(request):
 @login_required(login_url="/login/")
 def survey_answer_edit(request):
 
-     
+
     user_get = request.user
-    user_answer = Survey_Answers.objects.filter(user_name=user_get) 
+    user_answer = Survey_Answers.objects.filter(user_name=user_get)
 
 
     questions = []
     answers = ["1 (Strongly Disagree)", "1 (Disagree)", "3 (Neutral)", "4 (Agree)", "5 (Strongly Agree)"]
-    
 
-    
+
+
     for q in user_answer:
-        questions.append({str(q.text): {'answer': answers, 'user_answer': q.user_answer}}) 
- 
+        questions.append({str(q.text): {'answer': answers, 'user_answer': q.user_answer}})
+
 
 
     return JsonResponse({
@@ -834,39 +1036,36 @@ def survey_answer_edit(request):
     })
 
 @login_required(login_url="/login/")
-def survey_new_data_save(request): 
+def survey_new_data_save(request):
 
     # print(request.POST) # to see the response in command line
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         questions = []
         answers = []
         data = request.POST
-        print('you are in')
         #print(type(data)) -> type(data) is to see what type the data is in command line
         #result of above line is: <class 'django.http.request.QueryDict'>
         #this is a querydict, and we need to turn that one into regular python dic with below code line
         data_ = dict(data.lists())
-        
+
 
         data_.pop('csrfmiddlewaretoken')#data value has csrfmiddlewaretoken which we can remove with this code in order to have result data
 
-     
+
         for k in data_.keys(): #keys are QUESTION
             answer = Survey_Answers.objects.get(text=k) #with (text=k) we can bring all question related with their text
             #print(question)
             answers.append(answer)
-         
+
         user = request.user
         for q in answers:
             a_selected = request.POST.get(q.text)
             if a_selected != "":
                 t = Survey_Answers.objects.get(text=q.text)
-                t.user_answer = a_selected 
+                t.user_answer = a_selected
             t.save()
-         
+
 
     return JsonResponse({
         'editdata': "questions",
     })
-
- 
