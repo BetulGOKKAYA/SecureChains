@@ -25,14 +25,22 @@ SECRET_KEY = env('SECRET_KEY', default='S#perS3crEt_007')
 DEBUG = env('DEBUG')
 
 # Assets Management
-ASSETS_ROOT = os.getenv('ASSETS_ROOT', '/static/assets') 
+ASSETS_ROOT = os.getenv('ASSETS_ROOT', '/static/assets')
 
 # load production server from .env
 # HOSTs List
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'http://www.securechains.co.uk', 'www.securechains.co.uk', 'securechains.co.uk', 'https://www.securechains.co.uk']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'http://www.securechains.co.uk', 'www.securechains.co.uk', 'securechains.co.uk', 'https://www.securechains.co.uk','betulgokkaya.pythonanywhere.com', 'https://www.betulgokkaya.pythonanywhere.com']
 
 # Add here your deployment HOSTS
-CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://localhost:5085', 'http://127.0.0.1:8000', 'http://127.0.0.1:5085', 'http://www.securechains.co.uk', 'https://www.securechains.co.uk']
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://localhost:5085',
+    'http://127.0.0.1:8000',
+    'http://127.0.0.1:5085',
+    'http://www.securechains.co.uk',
+    'https://www.securechains.co.uk',
+    'https://betulgokkaya.pythonanywhere.com'
+]
 # Application definition
 
 # Application definition
@@ -51,10 +59,10 @@ INSTALLED_APPS = [
     'apps.survey',
     'allauth',                                      # OAuth new
     'allauth.account',                              # OAuth new
-    'allauth.socialaccount',                        # OAuth new 
-    'allauth.socialaccount.providers.github',       # OAuth new 
-    'allauth.socialaccount.providers.twitter',      # OAuth new  
-    "sslserver"    
+    'allauth.socialaccount',                        # OAuth new
+    'allauth.socialaccount.providers.github',       # OAuth new
+    'allauth.socialaccount.providers.twitter',      # OAuth new
+    "sslserver"
 ]
 
 MIDDLEWARE = [
@@ -86,7 +94,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'apps.context_processors.cfg_assets_root',
                 'apps.context_processors.risk_assessments',
-                'apps.context_processors.current_assessment', 
+                'apps.context_processors.current_assessment',
             ],
         },
     },
@@ -149,10 +157,10 @@ STATIC_URL = '/static/'
 # Extra places for collectstatic to find static files.
 STATICFILES_DIRS = (
     os.path.join(CORE_DIR, 'apps/static'),
-) 
+)
 
 #############################################################
-# OAuth settings 
+# OAuth settings
 
 GITHUB_ID     = os.getenv('GITHUB_ID', None)
 GITHUB_SECRET = os.getenv('GITHUB_SECRET', None)
@@ -163,7 +171,7 @@ AUTHENTICATION_BACKENDS = (
     "allauth.account.auth_backends.AuthenticationBackend",
 )
 
-SITE_ID                    = 1 
+SITE_ID                    = 1
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 SOCIALACCOUNT_PROVIDERS = {}
